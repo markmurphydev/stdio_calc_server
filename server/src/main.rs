@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self, BufRead, BufReader};
 
 use shared::Expr;
 
@@ -16,15 +16,16 @@ fn main() -> anyhow::Result<()> {
     // Read stdin in a loop.
     // Whenever we read a line, print it plus an exclamation mark.
     let stdin = io::stdin();
-    let mut buf = String::new();
+    let mut stdin = BufReader::new(stdin);
+    let mut buf = Vec::new();
     loop {
         buf.truncate(0);
-        let bytes_read = stdin.read_line(&mut buf).unwrap();
+        let bytes_read = stdin.read_until(b'\n', &mut buf)?;
         if bytes_read == 0 {
             return Ok(());
         }
 
-        let expr: Expr = serde_json::from_str(&buf)?;
+        let expr: Expr = postcard::from_bytes(&buf)?;
         eprintln!("{expr:?}");
         let res = eval(expr);
         println!("{res}");

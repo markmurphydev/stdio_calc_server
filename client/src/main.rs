@@ -48,10 +48,11 @@ fn main() -> anyhow::Result<()> {
             continue;
         };
 
-        let ast_string = serde_json::to_string(&ast)?;
+        let ast = postcard::to_allocvec(&ast)?;
 
         // Send input as request to server
-        server_stdin.write_all(format!("{ast_string}\n").as_bytes())?;
+        server_stdin.write_all(ast.as_slice())?;
+        server_stdin.write_all(b"\n")?;
         server_stdin.flush()?;
 
         // Wait on response from server
